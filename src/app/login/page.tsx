@@ -15,7 +15,9 @@ export default function LoginPage() {
         })
 
         if (error) {
-            console.error('Error logging in:', error.message)
+            if (process.env.NODE_ENV === 'development') {
+                console.error('Error logging in:', error.message)
+            }
         }
     }
 

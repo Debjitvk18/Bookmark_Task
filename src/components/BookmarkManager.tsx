@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { Bookmark } from '@/types/database.types'
@@ -11,13 +12,16 @@ interface BookmarkManagerProps {
 }
 
 export default function BookmarkManager({ user }: BookmarkManagerProps) {
+    const router = useRouter()
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
     const [title, setTitle] = useState('')
     const [url, setUrl] = useState('')
     const [loading, setLoading] = useState(false)
+    const [loggingOut, setLoggingOut] = useState(false)
     const [fetchingBookmarks, setFetchingBookmarks] = useState(true)
 
     const supabase = createClient()
+    const isDev = process.env.NODE_ENV === 'development'
 
     // Fetch bookmarks
     useEffect(() => {
@@ -37,7 +41,7 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
                     filter: `user_id=eq.${user.id}`,
                 },
                 (payload) => {
-                    console.log('🔔 Realtime event:', payload.eventType, payload)
+                    if (isDev) console.log('🔔 Realtime event:', payload.eventType, payload)
 
                     if (payload.eventType === 'INSERT') {
                         setBookmarks((current) => {
@@ -60,7 +64,7 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
                 }
             )
             .subscribe((status) => {
-                console.log('📡 Realtime subscription status:', status)
+                if (isDev) console.log('📡 Realtime subscription status:', status)
             })
 
         return () => {
@@ -126,34 +130,42 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
     }
 
     async function handleLogout() {
-        await fetch('/api/auth/logout', { method: 'POST' })
-        window.location.href = '/login'
+        setLoggingOut(true)
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' })
+            router.push('/login')
+            router.refresh()
+        } catch (error) {
+            console.error('Logout failed:', error)
+            setLoggingOut(false)
+        }
     }
 
     return (
-        <div>
+        <div className="px-4 sm:px-6 lg:px-8">
             {/* Header */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 mb-6 border border-white/20">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white mb-1">My Bookmarks</h1>
-                        <p className="text-purple-200">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-6 mb-6 border border-white/20">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-center sm:text-left">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">My Bookmarks</h1>
+                        <p className="text-purple-200 text-sm sm:text-base break-all">
                             Signed in as {user.email}
                         </p>
                     </div>
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 px-4 py-2 rounded-lg transition-all border border-red-500/30"
+                        disabled={loggingOut}
+                        className="flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 px-4 py-2 rounded-lg transition-all border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
                     >
                         <FiLogOut />
-                        Logout
+                        {loggingOut ? 'Logging out...' : 'Logout'}
                     </button>
                 </div>
             </div>
 
             {/* Add Bookmark Form */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 mb-6 border border-white/20">
-                <h2 className="text-xl font-semibold text-white mb-4">Add New Bookmark</h2>
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-6 mb-6 border border-white/20">
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Add New Bookmark</h2>
                 <form onSubmit={addBookmark} className="space-y-4">
                     <div>
                         <label htmlFor="title" className="block text-purple-200 mb-2 text-sm font-medium">
@@ -188,7 +200,7 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
                     >
                         <FiPlus className="text-xl" />
                         {loading ? 'Adding...' : 'Add Bookmark'}
@@ -197,8 +209,8 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
             </div>
 
             {/* Bookmarks List */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20">
-                <h2 className="text-xl font-semibold text-white mb-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-6 border border-white/20">
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">
                     Your Bookmarks ({bookmarks.length})
                 </h2>
 
@@ -217,29 +229,29 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
                         {bookmarks.map((bookmark) => (
                             <div
                                 key={bookmark.id}
-                                className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all group"
+                                className="bg-white/5 border border-white/10 rounded-lg p-3 sm:p-4 hover:bg-white/10 transition-all group"
                             >
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-white font-semibold mb-1 truncate">
+                                <div className="flex flex-col xs:flex-row items-start justify-between gap-3 sm:gap-4">
+                                    <div className="flex-1 min-w-0 w-full">
+                                        <h3 className="text-white font-semibold mb-1 truncate text-sm sm:text-base">
                                             {bookmark.title}
                                         </h3>
                                         <a
                                             href={bookmark.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-purple-300 hover:text-purple-200 text-sm flex items-center gap-1 truncate"
+                                            className="text-purple-300 hover:text-purple-200 text-xs sm:text-sm flex items-center gap-1 truncate"
                                         >
                                             <span className="truncate">{bookmark.url}</span>
                                             <FiExternalLink className="flex-shrink-0" />
                                         </a>
-                                        <p className="text-purple-400/70 text-xs mt-2">
+                                        <p className="text-purple-400/70 text-xs mt-1 sm:mt-2">
                                             Added {new Date(bookmark.created_at).toLocaleDateString()}
                                         </p>
                                     </div>
                                     <button
                                         onClick={() => deleteBookmark(bookmark.id)}
-                                        className="flex-shrink-0 text-red-400 hover:text-red-300 p-2 hover:bg-red-500/20 rounded-lg transition-all"
+                                        className="flex-shrink-0 text-red-400 hover:text-red-300 p-2 hover:bg-red-500/20 rounded-lg transition-all self-start xs:self-auto"
                                         title="Delete bookmark"
                                     >
                                         <FiTrash2 className="text-xl" />
