@@ -40,7 +40,12 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
                     console.log('🔔 Realtime event:', payload.eventType, payload)
 
                     if (payload.eventType === 'INSERT') {
-                        setBookmarks((current) => [payload.new as Bookmark, ...current])
+                        setBookmarks((current) => {
+                            // Prevent duplicates from optimistic updates
+                            const exists = current.some((b) => b.id === (payload.new as Bookmark).id)
+                            if (exists) return current
+                            return [payload.new as Bookmark, ...current]
+                        })
                     } else if (payload.eventType === 'DELETE') {
                         setBookmarks((current) =>
                             current.filter((bookmark) => bookmark.id !== payload.old.id)
@@ -84,16 +89,22 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
         if (!title.trim() || !url.trim()) return
 
         setLoading(true)
-        const { error } = await supabase.from('bookmarks').insert({
-            title: title.trim(),
-            url: url.trim(),
-            user_id: user.id,
-        })
+        const { data, error } = await supabase
+            .from('bookmarks')
+            .insert({
+                title: title.trim(),
+                url: url.trim(),
+                user_id: user.id,
+            })
+            .select()
+            .single()
 
         if (error) {
             console.error('Error adding bookmark:', error)
             alert('Failed to add bookmark')
         } else {
+            // Optimistic update - add to UI immediately
+            setBookmarks((current) => [data as Bookmark, ...current])
             setTitle('')
             setUrl('')
         }
