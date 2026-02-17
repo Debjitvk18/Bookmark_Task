@@ -134,7 +134,6 @@ export default function BookmarkManager({ user }: BookmarkManagerProps) {
         try {
             await fetch('/api/auth/logout', { method: 'POST' })
             router.push('/login')
-            router.refresh()
         } catch (error) {
             console.error('Logout failed:', error)
             setLoggingOut(false)
