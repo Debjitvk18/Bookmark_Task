@@ -15,6 +15,25 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     title: "Smart Bookmark Manager",
     description: "Manage your bookmarks with real-time sync across devices",
+    openGraph: {
+        title: "Smart Bookmark Manager",
+        description: "Manage your bookmarks with real-time sync across devices",
+        images: [
+            {
+                url: "/Frontimage.jpeg",
+                width: 1200,
+                height: 630,
+                alt: "Smart Bookmark Manager",
+            },
+        ],
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Smart Bookmark Manager",
+        description: "Manage your bookmarks with real-time sync across devices",
+        images: ["/Frontimage.jpeg"],
+    },
 };
 
 export default function RootLayout({
