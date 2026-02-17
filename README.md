@@ -332,21 +332,4 @@ smart-bookmark-app/
 
 ```bash
 npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
-```
 
----
-
-## 📄 License
-
-MIT
-
----
-
-## 👨‍💻 Built By
-
-[Your Name]
-
-**Submission Date:** February 2026
