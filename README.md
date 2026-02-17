@@ -2,8 +2,8 @@
 
 > A production-ready, real-time bookmark management application built with Next.js 15, Supabase, and Google OAuth.
 
-**Live Demo:** [Add your Vercel URL here]  
-**GitHub:** [Add your GitHub repo URL here]
+**Live Demo:** bookmark-task-r1sm.vercel.app
+**GitHub:** https://github.com/Debjitvk18/Bookmark_Task
 
 ---
 
